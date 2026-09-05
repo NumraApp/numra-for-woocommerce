@@ -1,0 +1,21 @@
+# Line endings are normalised in the repository, whatever the contributor's
+# machine does locally. A CRLF in a PHP file that WordPress reads is a
+# changed file hash on every platform.
+* text=auto eol=lf
+
+# Binary, so never touched.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.mo   binary
+*.woff binary
+*.woff2 binary
+
+# Never let an internal document reach a release archive, whatever ends
+# up in the working tree.
+/docs             export-ignore
+/ARCHITECTURE.md  export-ignore
+/.github          export-ignore
+/.gitattributes   export-ignore

@@ -1,0 +1,962 @@
+/* ============================================================================
+   Numra for WooCommerce — admin panel
+   ============================================================================
+   Rebuilt. The previous sheet leaned on Font Awesome for anything that looked
+   designed and used blue (#2563EB) and green (#22C55E) headings — neither is a
+   Numra colour — so the panel read as a generic WordPress plugin that happened
+   to be installed next to Numra.
+
+   Numra's ink, matched to the portal:
+     orange   #FF9523   the brand fill
+     ink      #30363E   headings and the mark's stem
+     body     #444C56
+     muted    #6E7781
+     hairline #E4E6EA
+     surface  #FFFFFF on WordPress's own #F0F0F1 canvas
+
+   Rules this sheet follows:
+   - A panel is separated by a hairline and a surface step, never by a resting
+     shadow. Shadows are for things that genuinely float (nothing here does).
+   - Type carries hierarchy, not colour. Headings are ink; only what the
+     merchant can act on is orange.
+   - Everything is scoped under .numra-wrap so no rule can leak into another
+     plugin's screen or into WordPress core chrome.
+   ========================================================================= */
+
+.numra-wrap {
+	--nm-orange:  #FF9523;
+	--nm-orange-d:#E07C0C;
+	--nm-ink:     #30363E;
+	--nm-body:    #444C56;
+	--nm-muted:   #6E7781;
+	--nm-line:    #E4E6EA;
+	--nm-surface: #FFFFFF;
+	--nm-well:    #F7F8F9;
+	--nm-ok:      #17803D;
+	--nm-warn:    #9A6700;
+	--nm-danger:  #B42318;
+	--nm-radius:  8px;
+
+	/* No width cap.
+	   ───────────────────────────────────────────────────────────────────────
+	   This was `max-width: 1080px`, which on a 1920 screen left roughly a
+	   third of the content column empty to the right of every panel — the
+	   plugin looked like it had been dropped into a page built for something
+	   bigger. WordPress gives admin screens the full column and WooCommerce,
+	   Elementor and core all use it.
+
+	   The cap was doing a job, though: keeping long text readable. That job
+	   belongs to the text, not to the page, so the measures are enforced on
+	   the paragraphs themselves (see .numra-activate-lead, .numra-step-body)
+	   and the panels are free to fill the width they are given. */
+	margin-right: 20px;
+	color: var(--nm-body);
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+.numra-wrap * { box-sizing: border-box; }
+
+/* ── Masthead ───────────────────────────────────────────────────────────── */
+
+.numra-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	padding: 18px 0 16px;
+	border-bottom: 1px solid var(--nm-line);
+	margin-bottom: 20px;
+}
+
+.numra-header-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+.numra-mark { width: 24px; height: 29px; flex-shrink: 0; display: block; }
+
+.numra-wrap .numra-header h1 {
+	margin: 0;
+	padding: 0;
+	font-size: 21px;
+	font-weight: 600;
+	line-height: 1.2;
+	letter-spacing: -0.02em;
+	color: var(--nm-ink);
+}
+
+.numra-header-sub { margin: 2px 0 0; font-size: 13px; color: var(--nm-muted); }
+
+.numra-header-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.numra-version { font-size: 12px; color: var(--nm-muted); font-variant-numeric: tabular-nums; }
+
+/* The one fact worth putting at the top of the page.
+   ───────────────────────────────────────────────────────────────────────────
+   A readout, not a chip. The bar is skewed to the same angle as the strokes in
+   the Numra mark two elements to its left, so the indicator belongs to this
+   product rather than to the generic status-pill family. Nothing is filled and
+   nothing is bordered: the state is carried by a stacked label-over-value pair,
+   which is the same shape as every other fact this panel presents. */
+.numra-state {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.numra-state-bar {
+	width: 5px;
+	height: 26px;
+	flex-shrink: 0;
+	/* -18deg matches the rake of the mark's parallelograms. */
+	transform: skewX(-18deg);
+	background: var(--nm-muted);
+}
+
+.numra-state-text { display: flex; flex-direction: column; line-height: 1.25; }
+
+.numra-state-label {
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--nm-muted);
+}
+
+.numra-state-value { font-size: 13px; font-weight: 600; color: var(--nm-ink); }
+
+.numra-state.is-live .numra-state-bar  { background: var(--nm-ok); }
+.numra-state.is-live .numra-state-value { color: var(--nm-ok); }
+.numra-state.is-off  .numra-state-bar  { background: var(--nm-danger); }
+.numra-state.is-off  .numra-state-value { color: var(--nm-danger); }
+
+/* ── Tabs ───────────────────────────────────────────────────────────────── */
+
+.numra-tabs {
+	display: flex;
+	gap: 2px;
+	border-bottom: 1px solid var(--nm-line);
+	margin-bottom: 20px;
+	/* Scrollable, but without the bar.
+	   `overflow-x: auto` alone paints a permanent scrollbar track on Windows,
+	   which is where most of these merchants are: a grey gutter sat under the
+	   tab row on every screen, at every width, including the ones with room to
+	   spare. The overflow still has to be scrollable — three tabs at a
+	   translated label length do not fit a narrow column — so the scrolling
+	   stays and only the chrome goes. */
+	overflow-x: auto;
+	scrollbar-width: none;          /* Firefox */
+	-ms-overflow-style: none;       /* legacy Edge */
+}
+.numra-tabs::-webkit-scrollbar { display: none; }   /* Chrome, Safari */
+
+.numra-wrap .numra-tab {
+	padding: 10px 16px;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--nm-muted);
+	text-decoration: none;
+	white-space: nowrap;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -1px;
+	transition: color .15s ease, border-color .15s ease;
+}
+.numra-wrap .numra-tab:hover  { color: var(--nm-ink); }
+.numra-wrap .numra-tab:focus  { box-shadow: none; outline: 2px solid var(--nm-orange); outline-offset: -2px; }
+.numra-wrap .numra-tab-active {
+	color: var(--nm-ink);
+	font-weight: 600;
+	border-bottom-color: var(--nm-orange);
+}
+
+/* ── The page ───────────────────────────────────────────────────────────────
+   Two columns inside whichever tab is open. Three tabs group the work by
+   errand — connect, credentials, order rules — and the grid keeps each of
+   those from being a lone strip in a field of grey.
+
+   Sections are placed by the markup order and each is a grid item, which means
+   a section that renders nothing (growth notices with no notices) collapses
+   rather than leaving a gap — the row heights come from content, not from a
+   fixed layout guessing at it. */
+.numra-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+	align-items: start;
+}
+.numra-span { grid-column: 1 / -1; }
+.numra-col  { min-width: 0; }
+/* Cards already carry their own bottom margin for the stacked case; inside a
+   gapped grid that doubles the spacing between sections. */
+.numra-grid .numra-card:last-child { margin-bottom: 0; }
+
+/* One column below WordPress's own touch breakpoint. Two columns of settings
+   at 600px is worse than a longer page. */
+@media screen and (max-width: 960px) {
+	.numra-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Credits meter ──────────────────────────────────────────────────────────
+   The one number on the dashboard that changes between visits, so it gets the
+   size. Everything the old status table showed was a constant; this is the
+   merchant's actual first question. */
+
+.numra-meter { margin: 0 0 20px; }
+
+.numra-meter-head {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+.numra-meter-value {
+	font-size: 30px;
+	line-height: 1;
+	font-weight: 650;
+	letter-spacing: -0.02em;
+	color: var(--nm-ink);
+	font-variant-numeric: tabular-nums;
+}
+
+.numra-meter-label { font-size: 13px; color: var(--nm-muted); }
+
+.numra-meter-track {
+	height: 6px;
+	border-radius: 3px;
+	background: var(--nm-line);
+	overflow: hidden;
+}
+
+.numra-meter-fill {
+	height: 100%;
+	border-radius: 3px;
+	background: var(--nm-ok);
+	transition: width .3s ease;
+}
+
+/* Amber at 75, red at 90 — steps, not a gradient. A bar that is permanently
+   part-orange teaches the eye that orange carries no information. */
+.numra-meter-track.is-warn     .numra-meter-fill { background: var(--nm-warn); }
+.numra-meter-track.is-critical .numra-meter-fill { background: var(--nm-danger); }
+
+.numra-meter-foot {
+	margin: 7px 0 0;
+	font-size: 12px;
+	color: var(--nm-muted);
+}
+.numra-meter-foot a { color: var(--nm-orange); text-decoration: none; font-weight: 550; }
+.numra-meter-foot a:hover { text-decoration: underline; }
+
+/* ── Health list ────────────────────────────────────────────────────────────
+   Replaces the seven-row <table>. A table implies rows you might compare or
+   sort; this is four facts about one store, so it is a definition list in
+   table clothing — label left, value right, hairline between. */
+
+.numra-health {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border-top: 1px solid var(--nm-line);
+}
+
+.numra-health li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin: 0;
+	padding: 9px 0;
+	border-bottom: 1px solid var(--nm-line);
+	font-size: 13px;
+}
+
+.numra-health-k { color: var(--nm-muted); }
+.numra-health-v { color: var(--nm-ink); font-weight: 550; text-align: right; }
+.numra-health-v.is-warn { color: var(--nm-warn); }
+
+/* The identifiers nobody reads until a support ticket. Present, small, last. */
+.numra-idline {
+	margin: 14px 0 0;
+	font-size: 11px;
+	line-height: 1.6;
+	color: var(--nm-muted);
+	word-break: break-all;
+}
+
+/* ── Customer type picker ───────────────────────────────────────────────────
+   Same shape as the risk bands above it, because it answers the same kind of
+   question — which customers do I hold — and two different control shapes for
+   one decision is one more thing to learn. */
+
+.numra-styles {
+	display: grid;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+@media screen and (min-width: 1200px) {
+	.numra-styles { grid-template-columns: 1fr 1fr; }
+}
+
+.numra-style {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 10px 12px;
+	border: 1px solid var(--nm-line);
+	border-radius: var(--nm-radius);
+	background: var(--nm-surface);
+	cursor: pointer;
+	transition: border-color .15s ease, background .15s ease;
+}
+.numra-style:hover { border-color: var(--nm-orange); background: var(--nm-well); }
+.numra-style input { margin: 2px 0 0; flex: none; }
+
+.numra-style-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.numra-style-name { font-size: 13px; font-weight: 600; color: var(--nm-ink); }
+.numra-style-desc { font-size: 12px; line-height: 1.5; color: var(--nm-muted); }
+
+/* ── Store sync consent ─────────────────────────────────────────────────────
+   The one screen in the plugin that asks permission rather than offering a
+   setting, so it is allowed the page's only accent edge — a 3px orange rule on
+   the leading side. That is the single exception to this sheet's "no coloured
+   borders" habit, and it is earned: this panel outranks everything beside it
+   until it is answered, and it disappears forever once it is.
+
+   Nothing about it is alarming. A tinted warning surface would read as an
+   error the merchant must clear, and the honest tone here is an offer. */
+
+.numra-wrap .numra-consent {
+	border-inline-start: 3px solid var(--nm-orange);
+	max-width: 760px;      /* Consent is prose. It obeys the reading measure. */
+}
+
+.numra-consent-lead {
+	font-size: 14px;
+	line-height: 1.65;
+	color: var(--nm-body);
+	margin: 0 0 16px;
+}
+
+.numra-consent-list {
+	margin: 0 0 18px;
+	padding: 0;
+	list-style: none;
+	display: grid;
+	gap: 8px;
+}
+
+.numra-consent-list li {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--nm-body);
+}
+
+/* The icon carries the yes/no; the text stays body colour so the list reads as
+   one statement rather than as two competing colours of sentence. */
+.numra-consent-list .numra-step-icon { flex: none; margin-top: 1px; }
+.numra-consent-list .is-yes .numra-step-icon { color: var(--nm-ok); }
+.numra-consent-list .is-no  .numra-step-icon { color: var(--nm-muted); }
+
+.numra-consent-agree {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 12px 14px;
+	background: var(--nm-well);
+	border: 1px solid var(--nm-line);
+	border-radius: var(--nm-radius);
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--nm-ink);
+	cursor: pointer;
+}
+.numra-consent-agree input { margin: 2px 0 0; flex: none; }
+
+.numra-consent-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 14px 0 0;
+}
+
+.numra-consent-fine {
+	margin: 14px 0 0;
+	font-size: 12px;
+	color: var(--nm-muted);
+}
+
+/* ── Sync status ────────────────────────────────────────────────────────────
+   One fact and one control, so it is a row and not a card-shaped box with a
+   button stranded at the bottom of it. */
+
+.numra-wrap .numra-sync {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	flex-wrap: wrap;
+}
+
+.numra-sync-text { min-width: 0; }
+.numra-wrap .numra-sync-text h2 { margin: 0 0 4px; }
+.numra-sync-text p { margin: 0; font-size: 13px; color: var(--nm-body); }
+.numra-sync-last  { margin-top: 4px !important; font-size: 12px !important; color: var(--nm-muted) !important; }
+.numra-sync-action { flex: none; margin: 0; }
+
+/* Off is a state, not a fault — muted, not red. */
+.numra-wrap .numra-sync.is-declined .numra-sync-text h2 { color: var(--nm-muted); }
+
+/* ── Recent checks ──────────────────────────────────────────────────────── */
+
+.numra-activity { margin: 0; padding: 0; list-style: none; }
+
+.numra-activity-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0;
+	padding: 9px 0;
+	border-top: 1px solid var(--nm-line);
+	font-size: 13px;
+}
+.numra-activity-row:first-child { border-top: 0; }
+
+.numra-wrap .numra-activity-order { font-weight: 600; color: var(--nm-ink); text-decoration: none; flex-shrink: 0; }
+.numra-wrap .numra-activity-order:hover { color: var(--nm-orange-d); }
+
+/* The number is the thing being judged, so it gets the row's free space and
+   truncates rather than wrapping a two-line row into the list. */
+.numra-activity-phone {
+	color: var(--nm-muted);
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 12px;
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* The verdict chips are the same ones the orders table uses. Defined here too
+   because the orders-list styles are printed inline on that screen only, and a
+   merchant reading the same word in two places should not see two designs. */
+.numra-activity-row .numra-risk {
+	display: inline-block;
+	min-width: 28px;
+	padding: 2px 8px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.6;
+	text-align: center;
+	flex-shrink: 0;
+}
+.numra-activity-row .numra-risk--ok      { background: #eaf7ef; color: #1c6b3f; }
+.numra-activity-row .numra-risk--high    { background: #fdf0e6; color: #8a4b12; }
+.numra-activity-row .numra-risk--blocked { background: #fdeaea; color: #8a1c1c; }
+.numra-activity-row .numra-risk--new     { background: #eef2f7; color: #3c4a5a; }
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+
+.numra-card {
+	background: var(--nm-surface);
+	border: 1px solid var(--nm-line);
+	border-radius: var(--nm-radius);
+	padding: 20px 22px;
+	margin-bottom: 16px;
+}
+
+.numra-wrap .numra-card h2 {
+	margin: 0 0 14px;
+	padding: 0;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--nm-ink);
+	line-height: 1.3;
+}
+
+.numra-wrap .numra-card h2 + .description { margin-top: -8px; }
+
+/* ── Status table ───────────────────────────────────────────────────────── */
+
+.numra-status-table { width: 100%; border-collapse: collapse; }
+
+.numra-status-table th,
+.numra-status-table td {
+	text-align: left;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--nm-line);
+	vertical-align: middle;
+	font-size: 13px;
+}
+.numra-status-table tr:last-child th,
+.numra-status-table tr:last-child td { border-bottom: 0; }
+
+.numra-status-table th {
+	width: 190px;
+	font-weight: 500;
+	color: var(--nm-muted);
+}
+.numra-status-table td { color: var(--nm-ink); font-weight: 500; }
+
+.numra-wrap code {
+	background: var(--nm-well);
+	border: 1px solid var(--nm-line);
+	border-radius: 4px;
+	padding: 2px 6px;
+	font-size: 12px;
+	color: var(--nm-ink);
+}
+
+/* ── Badges ─────────────────────────────────────────────────────────────── */
+
+.numra-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.5;
+	border: 1px solid transparent;
+}
+.numra-badge-success { background: #F1FAF3; color: var(--nm-ok);     border-color: #BBE7C8; }
+.numra-badge-error   { background: #FEF3F2; color: var(--nm-danger); border-color: #F3C9C4; }
+.numra-badge-warning { background: #FFF8EB; color: var(--nm-warn);   border-color: #F2D8A0; }
+.numra-badge-neutral { background: var(--nm-well); color: var(--nm-muted); border-color: var(--nm-line); }
+
+/* ── Notices ────────────────────────────────────────────────────────────── */
+
+.numra-notice {
+	padding: 12px 15px;
+	border: 1px solid var(--nm-line);
+	border-left: 3px solid var(--nm-muted);
+	border-radius: var(--nm-radius);
+	background: var(--nm-well);
+	margin-bottom: 16px;
+	font-size: 13px;
+	line-height: 1.6;
+}
+.numra-notice-success { background: #F1FAF3; border-color: #BBE7C8; border-left-color: var(--nm-ok); }
+.numra-notice-error   { background: #FEF3F2; border-color: #F3C9C4; border-left-color: var(--nm-danger); }
+.numra-notice-warning { background: #FFF8EB; border-color: #F2D8A0; border-left-color: var(--nm-warn); }
+
+/* ── Activation panel (not connected) ───────────────────────────────────────
+   The old empty state was centred, which is why it read as a dead page: a
+   centred column with nothing either side of it makes the whitespace the
+   subject. This one is left-aligned on the same axis as every other panel, so
+   the eye starts where it starts everywhere else in WordPress and the measure
+   stays readable.
+
+   Density here is earned, not decorative. The three steps are behaviour the
+   plugin actually performs; if a step ever stops being true, delete it rather
+   than rewriting it to keep the row of three.
+   ------------------------------------------------------------------------- */
+
+.numra-activate { padding: 0; overflow: hidden; }
+
+/* Two columns, because the panel is 1080px wide and the pitch is not.
+   ---------------------------------------------------------------------------
+   The first version put the head across the full width and capped the
+   paragraph at a measure. The measure was right and the result was still
+   wrong: the text stopped at ~600px and the remaining 400 sat empty, so the
+   panel read half-used — a wide box with content only in its left half.
+
+   The fault was the container, not the text. A panel only earns full width if
+   something occupies it, so the steps move up beside the pitch instead of
+   sitting under it. Now the width is used, the measure is still honoured, and
+   the two columns balance at roughly the same height. */
+/* Two columns again, because this panel is full-width in the only state it
+   appears in. It is the whole disconnected page: pitch and action left, the
+   three steps right, so the width it is given is width it uses. */
+.numra-activate-body {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+}
+@media screen and (max-width: 960px) {
+	.numra-activate-body { grid-template-columns: minmax(0, 1fr); }
+}
+
+.numra-activate-head { padding: 28px 26px 26px; }
+
+.numra-wrap .numra-activate-title {
+	margin: 0 0 10px;
+	padding: 0;
+	font-size: 22px;
+	font-weight: 600;
+	line-height: 1.25;
+	letter-spacing: -0.02em;
+	color: var(--nm-ink);
+}
+
+.numra-activate-lead {
+	margin: 0 0 22px;
+	font-size: 14px;
+	line-height: 1.65;
+	color: var(--nm-body);
+	/* Measure, not container width: this paragraph is the only long-form text
+	   on the panel and at 1080px it would otherwise run past comfort. */
+	max-width: 68ch;
+}
+
+.numra-activate-actions {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	flex-wrap: wrap;
+}
+
+/* The store address belongs beside the button, not under a heading of its own.
+   It is the one fact the merchant has to confirm before pressing, and pairing
+   it with the action is what makes it checkable at a glance. */
+.numra-activate-site {
+	font-size: 13px;
+	color: var(--nm-muted);
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
+.numra-activate-alt { margin: 14px 0 0; font-size: 13px; color: var(--nm-muted); }
+.numra-wrap .numra-activate-alt a { color: var(--nm-ink); text-decoration: underline; text-underline-offset: 2px; }
+.numra-wrap .numra-activate-alt a:hover { color: var(--nm-orange-d); }
+
+/* ── The three steps ─────────────────────────────────────────────────────── */
+
+/* Always a vertical list, at every width.
+   The row-of-three only ever existed to fill the space under the head. With
+   the steps beside the head that space is gone, and stacking removes the
+   breakpoint where three items in two columns left an empty cell — a hole the
+   eye read as a missing step. One orientation, no holes possible. */
+.numra-steps {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	background: var(--nm-well);
+	border-left: 1px solid var(--nm-line);
+}
+
+/* Icon beside the title, not stacked above it: the icon is the title's mark,
+   and a 20px glyph on its own line above a 13px heading spends a whole row on
+   nothing. The index sits at the far edge, where it closes the row instead of
+   reading as a superscript on the glyph. Body text starts under the title, not
+   under the icon, so the left rag stays straight. */
+.numra-step {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	column-gap: 11px;
+	align-items: center;
+	/* Pack the rows at the top. In the wide three-column layout the steps are
+	   grid items stretched to a common height, and without this the two rows
+	   share the leftover space — dropping each body halfway down its column,
+	   detached from the title it belongs to. */
+	align-content: start;
+	margin: 0;
+	padding: 15px 24px 17px;
+	border-top: 1px solid var(--nm-line);
+}
+.numra-step:first-child { border-top: 0; }
+
+.numra-step-mark {
+	grid-column: 1;
+	grid-row: 1;
+	display: flex;
+	color: var(--nm-orange-d);
+}
+
+.numra-step-icon { display: block; flex-shrink: 0; }
+
+.numra-step-n {
+	grid-column: 3;
+	grid-row: 1;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	color: var(--nm-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.numra-wrap .numra-step-title {
+	grid-column: 2;
+	grid-row: 1;
+	margin: 0;
+	padding: 0;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--nm-ink);
+}
+
+.numra-step-body {
+	grid-column: 2 / span 2;
+	grid-row: 2;
+	margin: 5px 0 0;
+	font-size: 13px;
+	line-height: 1.6;
+	color: var(--nm-body);
+	/* The measure lives on the paragraph now that no container caps the page.
+	   Without it a 1920 screen runs these lines past 90 characters. */
+	max-width: 64ch;
+}
+
+/* Wide screens: spread, do not stretch.
+   ───────────────────────────────────────────────────────────────────────────
+   Removing the page cap gave the panel the whole column, and a two-column
+   split of 1700px just moves the empty space inside the columns — the lead
+   still stops at its measure, the steps still stop at theirs, and the gap
+   reappears as padding nobody asked for.
+
+   Space is filled by content or not at all. Past 1400 the three steps stop
+   being a stacked list and take a column each, so the extra width buys three
+   readable columns instead of two padded ones. This is the one thing the
+   Elementor page genuinely does right: it fills width by putting more per row,
+   never by inflating what is already there. */
+/* The steps sit in a half-page column now, so they stay a stacked list at
+   every width — a three-across row would give each step ~180px. */
+
+.numra-activate-foot {
+	margin: 0;
+	padding: 14px 26px;
+	border-top: 1px solid var(--nm-line);
+	font-size: 12px;
+	color: var(--nm-muted);
+	background: var(--nm-surface);
+}
+
+/* WordPress collapses its own admin menu at 960, and the content column is
+   narrow well before that. Below it the two columns become one: the pitch has
+   nothing to share the row with, so the steps go back under it — full width,
+   still stacked, with the divider moving from the left edge to the top. */
+@media screen and (max-width: 960px) {
+	.numra-activate-body { grid-template-columns: minmax(0, 1fr); }
+	.numra-steps { border-left: 0; border-top: 1px solid var(--nm-line); }
+	/* Full width would run 13px body text past 80 characters. The measure is
+	   what keeps this readable, not the column that used to enforce it. */
+	.numra-step-body { max-width: 68ch; }
+}
+@media screen and (max-width: 782px) {
+	.numra-activate-head { padding: 22px 18px 20px; }
+	.numra-activate-foot { padding: 12px 18px; }
+	.numra-step { padding: 14px 18px 16px; }
+	/* Once the button takes its own line the address is the next thing read,
+	   not a thing beside it — a 14px column gap then reads as a gap between
+	   two unrelated blocks. */
+	.numra-activate-actions { gap: 10px; }
+}
+
+/* Numra's own button, not WordPress blue. The panel has exactly one primary
+   action at a time and this is it. */
+.numra-wrap .numra-connect-button.button,
+.numra-wrap .numra-connect-button.button-primary,
+.numra-wrap .numra-connect-button.button-hero {
+	background: var(--nm-orange);
+	border-color: var(--nm-orange);
+	color: #1B1B1B;
+	font-weight: 600;
+	text-shadow: none;
+	box-shadow: none;
+	border-radius: 6px;
+	padding: 10px 26px;
+	height: auto;
+	line-height: 1.4;
+	font-size: 14px;
+}
+.numra-wrap .numra-connect-button.button:hover,
+.numra-wrap .numra-connect-button.button-primary:hover {
+	background: var(--nm-orange-d);
+	border-color: var(--nm-orange-d);
+	color: #1B1B1B;
+}
+.numra-wrap .numra-connect-button:focus {
+	outline: 2px solid var(--nm-ink);
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+.numra-disconnect-row { margin: 18px 0 0; padding-top: 16px; border-top: 1px solid var(--nm-line); }
+.numra-wrap .numra-disconnect-button.button { color: var(--nm-danger); border-color: #F3C9C4; background: #FFF; }
+.numra-wrap .numra-disconnect-button.button:hover { background: #FEF3F2; border-color: var(--nm-danger); color: var(--nm-danger); }
+
+/* ── Forms ──────────────────────────────────────────────────────────────── */
+
+.numra-wrap .form-table th,
+.numra-wrap .numra-form-table th {
+	font-weight: 500;
+	color: var(--nm-ink);
+	font-size: 13px;
+	padding-left: 0;
+	width: 220px;
+}
+.numra-wrap .form-table td { padding-left: 0; }
+.numra-wrap .description { color: var(--nm-muted); font-size: 13px; line-height: 1.6; }
+
+.numra-wrap input[type="text"],
+.numra-wrap input[type="password"],
+.numra-wrap input[type="number"],
+.numra-wrap select {
+	border-radius: 6px;
+	border-color: #C6CBD1;
+}
+.numra-wrap input[type="text"]:focus,
+.numra-wrap input[type="password"]:focus,
+.numra-wrap input[type="number"]:focus,
+.numra-wrap select:focus {
+	border-color: var(--nm-orange);
+	box-shadow: 0 0 0 1px var(--nm-orange);
+	outline: 2px solid transparent;
+}
+
+.numra-key-saved { display: block; }
+
+.numra-wrap .widefat { border-radius: 6px; border-color: var(--nm-line); }
+.numra-wrap .widefat th { color: var(--nm-ink); font-weight: 600; font-size: 12px; }
+
+/* WordPress's own submit button, in Numra's colour. */
+.numra-wrap p.submit .button-primary,
+.numra-wrap .button-primary {
+	background: var(--nm-orange);
+	border-color: var(--nm-orange);
+	color: #1B1B1B;
+	font-weight: 600;
+	text-shadow: none;
+	box-shadow: none;
+	border-radius: 6px;
+}
+.numra-wrap .button-primary:hover,
+.numra-wrap .button-primary:focus {
+	background: var(--nm-orange-d);
+	border-color: var(--nm-orange-d);
+	color: #1B1B1B;
+}
+
+.numra-empty { color: var(--nm-muted); font-size: 13px; margin: 0; }
+
+/* ── Risk band choice ───────────────────────────────────────────────────────
+   Each option is a full row rather than a radio with a label beside it: the
+   difference between these bands is the sentence under the name, and a merchant
+   choosing how many of their orders to hold should be reading that sentence,
+   not guessing from four similar titles. */
+.numra-band {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 10px 12px;
+	margin: 0 0 6px;
+	border: 1px solid var(--nm-line);
+	border-radius: var(--nm-radius);
+	background: var(--nm-surface);
+	max-width: 62ch;
+	cursor: pointer;
+}
+/* Two across once there is room. Order protection is the one full-width row on
+   the page, and a single column of four options left half of it empty — the
+   same mistake as the panel above it, one level down. */
+.numra-bands { display: grid; gap: 8px; }
+@media screen and (min-width: 1200px) {
+	.numra-bands { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.numra-band  { max-width: none; margin: 0; }
+}
+
+.numra-band:hover { border-color: var(--nm-muted); }
+.numra-wrap .numra-band input[type="radio"] { margin: 3px 0 0; flex-shrink: 0; }
+.numra-band:has(input:checked) { border-color: var(--nm-orange); background: #FFF9F2; }
+
+.numra-band-text { display: flex; flex-direction: column; min-width: 0; }
+.numra-band-name { font-size: 13px; font-weight: 600; color: var(--nm-ink); }
+.numra-band-desc { font-size: 12px; color: var(--nm-muted); line-height: 1.5; margin-top: 1px; }
+
+/* Not a coloured chip: the recommendation is a note on the name, so it stays
+   at the weight of the sentence it modifies. */
+.numra-band-rec {
+	font-style: normal;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--nm-orange-d);
+	margin-left: 6px;
+}
+
+/* ── Check a number ─────────────────────────────────────────────────────── */
+
+/* The credit figure leads, because it is the constraint the merchant is
+   working against every time they press the button below it. */
+.numra-credits {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	padding: 12px 14px;
+	margin: 14px 0 16px;
+	background: var(--nm-well);
+	border: 1px solid var(--nm-line);
+	border-radius: var(--nm-radius);
+}
+.numra-credits-num   { font-size: 24px; font-weight: 600; color: var(--nm-ink); line-height: 1; }
+.numra-credits-label { font-size: 13px; color: var(--nm-muted); }
+
+.numra-check-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.numra-wrap .numra-check-row input[type="tel"] { max-width: 280px; }
+
+.numra-check-result { margin-top: 16px; }
+.numra-check-result.is-loading { opacity: .5; }
+.numra-check-result.has-result,
+.numra-check-result.has-error {
+	padding: 14px 16px;
+	border: 1px solid var(--nm-line);
+	border-radius: var(--nm-radius);
+	background: var(--nm-surface);
+}
+.numra-check-result.has-error { background: #FEF3F2; border-color: #F3C9C4; color: var(--nm-danger); }
+.numra-check-result.has-error p { margin: 0; }
+
+.numra-check-head { display: flex; align-items: center; gap: 12px; }
+.numra-check-head strong { font-size: 15px; color: var(--nm-ink); display: block; }
+.numra-check-phone { font-size: 12px; color: var(--nm-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.numra-check-score {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 46px;
+	height: 46px;
+	border-radius: var(--nm-radius);
+	font-size: 18px;
+	font-weight: 600;
+	flex-shrink: 0;
+}
+.numra-check-score.is-ok      { background: #F1FAF3; color: var(--nm-ok); }
+.numra-check-score.is-high    { background: #FFF8EB; color: var(--nm-warn); }
+.numra-check-score.is-blocked { background: #FEF3F2; color: var(--nm-danger); }
+
+.numra-check-list { margin: 12px 0 0; }
+.numra-check-list li {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 7px 0;
+	margin: 0;
+	border-top: 1px solid var(--nm-line);
+	font-size: 13px;
+}
+.numra-check-list li span:first-child { color: var(--nm-muted); }
+.numra-check-list li span:last-child  { color: var(--nm-ink); font-weight: 500; text-align: right; }
+
+.numra-check-left { margin: 12px 0 0; font-size: 12px; color: var(--nm-muted); }
+
+/* ── Small screens ──────────────────────────────────────────────────────── */
+
+@media screen and (max-width: 782px) {
+	.numra-wrap { margin-right: 10px; }
+	.numra-header { align-items: flex-start; }
+	.numra-status-table th { width: auto; display: block; padding-bottom: 2px; border-bottom: 0; }
+	.numra-status-table td { display: block; padding-top: 0; }
+	.numra-wrap .form-table th,
+	.numra-wrap .numra-form-table th { width: auto; }
+	.numra-card { padding: 16px; }
+}

@@ -1,0 +1,132 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Release pipeline for the WordPress plugin
+# ───────────────────────────────────────────────────────────────────────────
+# Copy to .github/workflows/publish.yml in the numra-wordpress repo.
+#
+# THIS ONE DOES NOT PUBLISH, AND THAT IS DELIBERATE.
+#
+# The other two templates push to a registry. There is no registry here:
+# distribution is Numra's own platform, and what decides the fleet's version is
+# a row in `plugin_releases` written from the control panel by a person with
+# `growth.manage`. That is an authenticated, human, reversible step and it
+# should stay one — pushing a plugin to every store is not something a tag
+# should be able to do on its own.
+#
+# So this workflow proves the release and hands you the artifact. Publishing is
+# a deliberate click, and the job summary says so.
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: Release
+
+# ── Actions are pinned to full commit SHAs, not tags ──────────────────────────
+# A tag is mutable: whoever controls the action's repository can repoint `v4` at
+# any commit, and that commit then runs inside a job holding NPM_TOKEN and
+# `id-token: write`. This is a package that reads a fraud database — the tag
+# comment after each SHA is for humans, and the SHA is what actually runs.
+#
+# Resolved with `git ls-remote --tags <repo> <tag>` on 4 September 2026.
+# To move one: re-run that, replace the SHA, update the comment.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+# Read by default. `verify` runs on every pull_request, including from a fork,
+# and a write-scoped GITHUB_TOKEN in a job that executes PR code is a token any
+# contributor can spend. Only `build` creates a release, so only `build` gets
+# write.
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The floor the plugin header declares. Test it, or "Requires PHP 7.4"
+        # is an aspiration.
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: shivammathur/setup-php@b604ade2a87db23f8871b7182e69ec5e75effb45 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: zip
+          coverage: none
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      # Four gates: PHP syntax, class/method integrity, unit tests, and the
+      # three version strings agreeing. No dependencies to install — the
+      # plugin has none and the checks have none.
+      - run: node tests/run.mjs
+        env:
+          # The published-release comparison is advisory and reports only.
+          NUMRA_API_BASE: https://api.numra.ma
+
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    # Narrower than the workflow default, and only this job needs it:
+    # softprops/action-gh-release attaches the zip to the tag's release.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: shivammathur/setup-php@b604ade2a87db23f8871b7182e69ec5e75effb45 # v2
+        with: { php-version: '8.3', extensions: zip, coverage: none }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 20 }
+
+      # Builds, and refuses if this version was already built from different
+      # source — see releases.json. On a tag that means the tag is wrong, not
+      # that the guard is.
+      - run: node build.mjs
+
+      - name: Tag must match the plugin header
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          SRC=$(grep -oP '^\s*\*\s*Version:\s*\K[0-9.]+' numra-for-woocommerce.php | head -1)
+          if [ "$TAG" != "$SRC" ]; then
+            echo "::error::Tag v$TAG does not match the plugin header $SRC."
+            echo "WordPress compares the version string and nothing else, so a"
+            echo "zip published under the wrong number can never be corrected."
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: numra-for-woocommerce
+          path: dist/numra-for-woocommerce.zip
+          if-no-files-found: error
+
+      - name: Attach to the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          files: dist/numra-for-woocommerce.zip
+          fail_on_unmatched_files: true
+
+      # The last step is a person. Say so where they will read it, rather than
+      # letting a green tick imply the fleet has been updated.
+      - name: What still has to happen
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          {
+            echo "### Built, not published"
+            echo ""
+            echo "\`${GITHUB_REF_NAME}\` is attached to the release above."
+            echo "**No store is being offered it yet.**"
+            echo ""
+            echo "To ship it: control panel → Plugin releases → upload the zip,"
+            echo "then mark it current. Until that row exists, \`update-check\`"
+            echo "keeps telling every store the previous version is the latest."
+          } >> "$GITHUB_STEP_SUMMARY"

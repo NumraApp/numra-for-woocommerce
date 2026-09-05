@@ -1,0 +1,15 @@
+{
+  "1.17.0": {
+    "fingerprint": "67d8059b2e5a5cf8",
+    "entries": 27,
+    "size_kb": 118.1,
+    "built_at": "2026-08-29T16:10:12Z",
+    "note": "Seeded from the zip actually served at /downloads/sdks when this ledger was created, not from a build. The source tree has moved past it — see RELEASING.md."
+  },
+  "1.18.0": {
+    "fingerprint": "68fb16c54e1f5974",
+    "entries": 28,
+    "size_kb": 119.7,
+    "built_at": "2026-09-03T18:56:21Z"
+  }
+}

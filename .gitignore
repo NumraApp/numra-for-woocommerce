@@ -1,0 +1,6 @@
+# The built package. releases.json is the record that matters and IS committed;
+# the zip itself is reproducible from any tagged commit.
+/dist/
+
+# Nothing here needs npm. If a node_modules appears, something went wrong.
+/node_modules/
